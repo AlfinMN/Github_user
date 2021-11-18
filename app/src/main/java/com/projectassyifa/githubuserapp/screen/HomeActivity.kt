@@ -2,45 +2,63 @@ package com.projectassyifa.githubuserapp.screen
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.View
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.projectassyifa.githubuserapp.R
 import com.projectassyifa.githubuserapp.data.GithubUserAdapter
-import com.projectassyifa.githubuserapp.data.GithubUserModel
+import com.projectassyifa.githubuserapp.data.GithubViewModel
 import com.projectassyifa.githubuserapp.databinding.ActivityHomeBinding
 
-class HomeActivity : AppCompatActivity() {
-    private val list = ArrayList<GithubUserModel>()
+class HomeActivity : AppCompatActivity()  {
     private lateinit var binding: ActivityHomeBinding
+    private lateinit var githubVM : GithubViewModel
+    private lateinit var githubUserAdapter: GithubUserAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.userRv.setHasFixedSize(true)
-        list.addAll(listUser)
-        showList()
-    }
-    private val listUser:ArrayList<GithubUserModel>
-    get() {
-        val name = resources.getStringArray(R.array.github_name)
-        val username = resources.getStringArray(R.array.github_username)
-        val avatar = resources.obtainTypedArray(R.array.github_avatar)
-        val follower = resources.getStringArray(R.array.github_follower)
-        val following = resources.getStringArray(R.array.github_following)
-        val company = resources.getStringArray(R.array.github_company)
-        val location = resources.getStringArray(R.array.github_location)
-        val repo = resources.getStringArray(R.array.github_repo)
-        val phone = resources.getStringArray(R.array.github_phone)
-        val listGithubUser = ArrayList<GithubUserModel>()
-        for (position in name.indices ) {
-            val user = GithubUserModel(username[position],name[position],avatar.getResourceId(position,-1),follower[position],following[position],company[position],location[position],repo[position],phone[position])
-            listGithubUser.add(user)
+
+        githubUserAdapter = GithubUserAdapter()
+        githubUserAdapter.notifyDataSetChanged()
+        githubVM = ViewModelProvider(this,ViewModelProvider.NewInstanceFactory()).get(GithubViewModel::class.java)
+        binding.apply {
+            userRv.setHasFixedSize(true)
+            userRv.layoutManager = LinearLayoutManager(this@HomeActivity)
+            userRv.adapter = githubUserAdapter
+
+            etSearch.setOnKeyListener { view, i, keyEvent ->
+                if (keyEvent.action == KeyEvent.ACTION_DOWN && i == KeyEvent.KEYCODE_ENTER ){
+                    searching()
+                    return@setOnKeyListener true
+                }
+                return@setOnKeyListener false
+            }
+            btnSearch.setOnClickListener{
+                searching()
+            }
+            githubVM.dataSearch().observe(this@HomeActivity,{
+                if (it != null){
+                    githubUserAdapter.setList(it)
+                    showLoad(false)
+                }
+            })
+
         }
-        return listGithubUser
     }
-    private fun showList() {
-        binding.userRv.layoutManager = LinearLayoutManager(this)
-        val githubUserAdapter = GithubUserAdapter(list,this)
-        binding.userRv.adapter = githubUserAdapter
-    }
+            private fun searching(){
+                binding.apply {
+                    val q = etSearch.text.toString()
+                    if (q.isEmpty()) return
+                    showLoad(true)
+                    githubVM.searchUsers(q)
+                }
+            }
+            private fun showLoad(state : Boolean){
+                if (state){
+                    binding.loadUser.visibility = View.VISIBLE
+                }else{
+                    binding.loadUser.visibility = View.GONE
+                }
+              }
 }

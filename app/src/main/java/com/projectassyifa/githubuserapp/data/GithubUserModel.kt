@@ -1,19 +1,23 @@
 package com.projectassyifa.githubuserapp.data
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
-
-@Parcelize
 data class GithubUserModel(
-    val username: String ,
-    val name: String,
-    val avatar: Int,
-    val follower: String,
-    val following: String,
-    val company : String,
-    val location : String,
-    val repository: String,
-    val phone : String
-) :Parcelable
+    val login : String ,
+    val id : Int,
+    val avatar_url : String,
+)
+data class GithubUserDetailModel(
+    var name : String,
+    var login : String ,
+    var avatar_url: String,
+    var company : String,
+    var location : String,
+    var bio : String,
+    var followers : Int,
+    var following :Int
+
+)
+data class ResponseAPI(
+    val items : ArrayList<GithubUserModel>
+)
 
 
